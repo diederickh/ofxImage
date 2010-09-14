@@ -80,7 +80,7 @@ bool ofxImage::loadImage(string fileName){
 }
 
 //------------------------------------
-bool ofxImage::saveImage(string fileName){
+bool ofxImage::saveImage(string fileName) {
 	string localFileName = getFileName();
 	if(fileName == "" && localFileName != "")
 		fileName = localFileName;
@@ -95,7 +95,7 @@ bool ofxImage::saveImage(string fileName){
 
 //----------------------------------------------------------------
 // copied directly from core ofImage::saveImageFromPixels, with added bool return value
-bool ofxImage::saveImageFromPixels(string fileName, ofPixels &pix){
+bool ofxImage::saveImageFromPixels(string fileName, ofPixels &pix, int nQuality){
 	bool result = false;
 	if (pix.bAllocated == false){
 		ofLog(OF_LOG_ERROR,"error saving image - pixels aren't allocated");
@@ -121,7 +121,7 @@ bool ofxImage::saveImageFromPixels(string fileName, ofPixels &pix){
 			fif = FreeImage_GetFIFFromFilename(fileName.c_str());
 		}
 		if((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
-			result = FreeImage_Save(fif, bmp, fileName.c_str(), JPEG_QUALITYSUPERB);
+			result = FreeImage_Save(fif, bmp, fileName.c_str(), nQuality);
 		}
 	}
 	
@@ -188,4 +188,119 @@ void ofxImage::rotatePixels(ofPixels &pix, float angle){
 	
 	if (bmp != NULL)            FreeImage_Unload(bmp);
 	if (convertedBmp != NULL)      FreeImage_Unload(convertedBmp);
+}
+
+//----------------------------------------------------
+void ofxImage::loadFromURL(string sURL) {
+	cout << " load....:  "<< sURL << std::endl;
+	if(sURL == "")
+		return;
+	//poco is not happy if we register the factory more than once
+   if(!factoryLoaded){
+      HTTPStreamFactory::registerFactory();
+      factoryLoaded = true;
+   }
+
+//copy to our string
+   string str; 
+   //specify out url and open stream
+	try {	
+		URI uri(sURL);      
+		std::auto_ptr<std::istream> pStr(URIStreamOpener::defaultOpener().open(uri));
+	   StreamCopier::copyToString(*pStr.get(), str); 
+	}
+	catch (Poco::Exception& e) {
+		std::cout << "Poco thrown exception while loading the image." << std::endl;
+		return;
+	}
+	
+   
+         
+
+
+   //figure out how many bytes the image is and allocate
+   int bytesToRead = str.size(); 
+   char buff[bytesToRead]; 
+   memset(buff, 0, bytesToRead); 
+   
+   //copy the bytes from the string to our buffer
+   for(int i = 0; i < bytesToRead; i++){ 
+    buff[i] = str[i]; 
+   } 
+
+   printf("numBytes copied is %i \n", sizeof(buff));
+
+
+//++
+	FIMEMORY *hmem = NULL;	
+    hmem = FreeImage_OpenMemory((unsigned char*)buff, bytesToRead);
+	if (hmem == NULL){
+		printf("couldn't create memory handle! \n");
+		return;
+	}
+
+	//get the file type!
+	FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem);
+	if( fif == -1 ){
+		printf("unable to guess format", fif);
+		return;
+		FreeImage_CloseMemory(hmem);
+	}
+
+	//make the image!!
+	FIBITMAP * tmpBmp = FreeImage_LoadFromMemory(fif, hmem, 0);
+	/*
+	if( rotateMode > 0 && rotateMode < 4){
+		FIBITMAP * oldBmp = tmpBmp;
+
+		if( rotateMode == 1)tmpBmp = FreeImage_RotateClassic(tmpBmp, 90);
+		if( rotateMode == 2)tmpBmp = FreeImage_RotateClassic(tmpBmp, 180);
+		if( rotateMode == 3)tmpBmp = FreeImage_RotateClassic(tmpBmp, 270);
+
+		FreeImage_Unload(oldBmp);
+	}
+	*/
+	//FreeImage_FlipVertical(tmpBmp);
+	printf("LOADED!");
+	putBmpIntoPixels(tmpBmp, myPixels);
+	width 		= FreeImage_GetWidth(tmpBmp);
+	height 		= FreeImage_GetHeight(tmpBmp);
+	bpp 		= FreeImage_GetBPP(tmpBmp);
+
+	//swapRgb(myPixels);
+	cout << " loaded:  "<< sURL << std::endl;
+	//setFromPixels(getPixels(), width,height, OF_IMAGE_COLOR);
+	FreeImage_Unload(tmpBmp);
+	FreeImage_CloseMemory(hmem);
+	update();
+//++
+
+
+
+   //if we already have a loaded image clear it
+ //  if(isValid()){ 
+   // clear();     
+   //}
+    
+   /*
+   //create a freeimage memory handle from the buffer address
+   FIMEMORY *hmem = NULL; 
+   hmem = FreeImage_OpenMemory((unsigned char *)buff, bytesToRead); 
+   if (hmem == NULL){ printf("couldn't create memory handle! \n"); return; } 
+      
+   //get the file type!
+   FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem); 
+
+   //make the image!!
+   bmp = FreeImage_LoadFromMemory(fif, hmem, 0);
+
+   //free our memory
+   FreeImage_CloseMemory(hmem);
+   
+   if (bmp == NULL){ printf("couldn't create bmp! \n"); return; } 
+   
+   //flip it!
+   FreeImage_FlipVertical(bmp); 
+   update(); 
+   */
 }

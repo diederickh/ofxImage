@@ -10,6 +10,28 @@
 #ifndef _OFX_IMAGE
 #define _OFX_IMAGE
 
+// - begin for loadFromURL
+
+#include "Poco/URIStreamOpener.h"
+#include "Poco/StreamCopier.h"
+#include "Poco/Path.h"
+#include "Poco/URI.h"
+#include "Poco/Exception.h"
+#include "Poco/Net/HTTPStreamFactory.h"
+#include <memory>
+#include <iostream>
+
+using Poco::URIStreamOpener;
+using Poco::StreamCopier;
+using Poco::Path;
+using Poco::URI;
+using Poco::Exception;
+using Poco::Net::HTTPStreamFactory;
+
+static bool factoryLoaded = false;
+// -- end
+
+
 #include "ofMain.h"
 
 class ofxImage : public ofImage{
@@ -18,8 +40,10 @@ protected:
 	
 	void flipPixels(ofPixels &pix, bool horizontal, bool vertical);
 	void rotatePixels(ofPixels &pix, float angle);
-	bool saveImageFromPixels(string fileName, ofPixels &pix);
+	bool saveImageFromPixels(string fileName, ofPixels &pix, int nQuality = JPEG_QUALITYSUPERB);
+
 	
+		
 public:
 	ofxImage();
 	
@@ -33,6 +57,7 @@ public:
 	bool loadImage(string fileName="");
 	bool saveImage(string fileName="");
 	void setFileName(string fileName);
+	void loadFromURL(string sURL);
 	
 	void mirror(bool horizontal, bool vertical);
 	void rotate(float angle);
