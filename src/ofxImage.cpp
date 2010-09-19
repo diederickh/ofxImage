@@ -84,12 +84,12 @@ bool ofxImage::saveImage(string fileName) {
 	string localFileName = getFileName();
 	if(fileName == "" && localFileName != "")
 		fileName = localFileName;
-	
+
 	bool result = saveImageFromPixels(fileName, myPixels);
 
 	if(result && fileName != getFileName())
 		setFileName(fileName);
-	
+
 	return result;
 }
 
@@ -101,17 +101,17 @@ bool ofxImage::saveImageFromPixels(string fileName, ofPixels &pix, int nQuality)
 		ofLog(OF_LOG_ERROR,"error saving image - pixels aren't allocated");
 		return result;
 	}
-	
+
 #ifdef TARGET_LITTLE_ENDIAN
-	if (pix.bytesPerPixel != 1) swapRgb(pix);
+	//if (pix.bytesPerPixel != 1) swapRgb(pix);
 #endif
-	
+
 	FIBITMAP * bmp	= getBmpFromPixels(pix);
-	
+
 #ifdef TARGET_LITTLE_ENDIAN
-	if (pix.bytesPerPixel != 1) swapRgb(pix);
+	//if (pix.bytesPerPixel != 1) swapRgb(pix);
 #endif
-	
+
 	fileName = ofToDataPath(fileName);
 	if (pix.bAllocated == true){
 		FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
@@ -124,7 +124,7 @@ bool ofxImage::saveImageFromPixels(string fileName, ofPixels &pix, int nQuality)
 			result = FreeImage_Save(fif, bmp, fileName.c_str(), nQuality);
 		}
 	}
-	
+
 	if (bmp != NULL){
 		FreeImage_Unload(bmp);
 	}
@@ -140,19 +140,19 @@ void ofxImage::setFileName(string fileName){
 //------------------------------------
 void ofxImage::mirror(bool horizontal, bool vertical){
 	flipPixels(myPixels, horizontal, vertical);
-	
+
 	update();
 }
 
 //------------------------------------
 void ofxImage::rotate(float angle){
 	rotatePixels(myPixels, angle);
-	
+
 	tex.clear();
 	if (bUseTexture == true){
 		tex.allocate(myPixels.width, myPixels.height, myPixels.glDataType);
 	}
-	
+
 	update();
 }
 
@@ -160,18 +160,18 @@ void ofxImage::rotate(float angle){
 void ofxImage::flipPixels(ofPixels &pix, bool horizontal, bool vertical){
 	if(!horizontal && !vertical)
 		return;
-	
+
 	FIBITMAP * bmp               = getBmpFromPixels(pix);
 	bool horSuccess = false, vertSuccess = false;
-	
+
 	if(horizontal)
 		horSuccess = FreeImage_FlipHorizontal(bmp);
 	if(vertical)
 		vertSuccess = FreeImage_FlipVertical(bmp);
-	
+
 	if(horSuccess || vertSuccess)
 		putBmpIntoPixels(bmp, pix);
-	
+
 	if (bmp != NULL)            FreeImage_Unload(bmp);
 }
 
@@ -179,13 +179,13 @@ void ofxImage::flipPixels(ofPixels &pix, bool horizontal, bool vertical){
 void ofxImage::rotatePixels(ofPixels &pix, float angle){
 	if(angle == 0.0)
 		return;
-	
+
 	FIBITMAP * bmp               = getBmpFromPixels(pix);
 	FIBITMAP * convertedBmp         = NULL;
-	
+
 	convertedBmp = FreeImage_RotateClassic(bmp, angle);
 	putBmpIntoPixels(convertedBmp, pix);
-	
+
 	if (bmp != NULL)            FreeImage_Unload(bmp);
 	if (convertedBmp != NULL)      FreeImage_Unload(convertedBmp);
 }
@@ -202,37 +202,37 @@ void ofxImage::loadFromURL(string sURL) {
    }
 
 //copy to our string
-   string str; 
+   string str;
    //specify out url and open stream
-	try {	
-		URI uri(sURL);      
+	try {
+		URI uri(sURL);
 		std::auto_ptr<std::istream> pStr(URIStreamOpener::defaultOpener().open(uri));
-	   StreamCopier::copyToString(*pStr.get(), str); 
+	   StreamCopier::copyToString(*pStr.get(), str);
 	}
 	catch (Poco::Exception& e) {
 		std::cout << "Poco thrown exception while loading the image." << std::endl;
 		return;
 	}
-	
-   
-         
+
+
+
 
 
    //figure out how many bytes the image is and allocate
-   int bytesToRead = str.size(); 
-   char buff[bytesToRead]; 
-   memset(buff, 0, bytesToRead); 
-   
+   int bytesToRead = str.size();
+   char buff[bytesToRead];
+   memset(buff, 0, bytesToRead);
+
    //copy the bytes from the string to our buffer
-   for(int i = 0; i < bytesToRead; i++){ 
-    buff[i] = str[i]; 
-   } 
+   for(int i = 0; i < bytesToRead; i++){
+    buff[i] = str[i];
+   }
 
    printf("numBytes copied is %i \n", sizeof(buff));
 
 
 //++
-	FIMEMORY *hmem = NULL;	
+	FIMEMORY *hmem = NULL;
     hmem = FreeImage_OpenMemory((unsigned char*)buff, bytesToRead);
 	if (hmem == NULL){
 		printf("couldn't create memory handle! \n");
@@ -278,29 +278,29 @@ void ofxImage::loadFromURL(string sURL) {
 
 
    //if we already have a loaded image clear it
- //  if(isValid()){ 
-   // clear();     
+ //  if(isValid()){
+   // clear();
    //}
-    
+
    /*
    //create a freeimage memory handle from the buffer address
-   FIMEMORY *hmem = NULL; 
-   hmem = FreeImage_OpenMemory((unsigned char *)buff, bytesToRead); 
-   if (hmem == NULL){ printf("couldn't create memory handle! \n"); return; } 
-      
+   FIMEMORY *hmem = NULL;
+   hmem = FreeImage_OpenMemory((unsigned char *)buff, bytesToRead);
+   if (hmem == NULL){ printf("couldn't create memory handle! \n"); return; }
+
    //get the file type!
-   FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem); 
+   FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem);
 
    //make the image!!
    bmp = FreeImage_LoadFromMemory(fif, hmem, 0);
 
    //free our memory
    FreeImage_CloseMemory(hmem);
-   
-   if (bmp == NULL){ printf("couldn't create bmp! \n"); return; } 
-   
+
+   if (bmp == NULL){ printf("couldn't create bmp! \n"); return; }
+
    //flip it!
-   FreeImage_FlipVertical(bmp); 
-   update(); 
+   FreeImage_FlipVertical(bmp);
+   update();
    */
 }

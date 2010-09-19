@@ -1,1 +1,5 @@
 Forked ofxImage, see http://code.google.com/p/tiof/ for original version.
+
+- When trying to compile ofxImage on Windows using CodeBlocks, I got a 
+"undefined reference to ofImage::swapRgb", which is defined in ofImage. 
+For now I just commented the call in ofxImage at line 106 and 112.
