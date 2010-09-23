@@ -103,13 +103,13 @@ bool ofxImage::saveImageFromPixels(string fileName, ofPixels &pix, int nQuality)
 	}
 
 #ifdef TARGET_LITTLE_ENDIAN
-	//if (pix.bytesPerPixel != 1) swapRgb(pix);
+	if (pix.bytesPerPixel != 1) swapRgb(pix);
 #endif
 
 	FIBITMAP * bmp	= getBmpFromPixels(pix);
 
 #ifdef TARGET_LITTLE_ENDIAN
-	//if (pix.bytesPerPixel != 1) swapRgb(pix);
+	if (pix.bytesPerPixel != 1) swapRgb(pix);
 #endif
 
 	fileName = ofToDataPath(fileName);
@@ -304,3 +304,23 @@ void ofxImage::loadFromURL(string sURL) {
    update();
    */
 }
+
+// The swapRgb function isn't defined in the openFrameworks.lib
+// on Windows/codeblocks
+//------------------------------------------------------------
+inline void ofxImage::swapRgb(ofPixels &pix){
+	if (pix.bitsPerPixel != 8){
+		int sizePixels		= pix.width*pix.height;
+		int cnt				= 0;
+		unsigned char temp;
+		int byteCount		= pix.bitsPerPixel/8;
+
+		while (cnt < sizePixels){
+			temp					= pix.pixels[cnt*byteCount];
+			pix.pixels[cnt*byteCount]		= pix.pixels[cnt*byteCount+2];
+			pix.pixels[cnt*byteCount+2]		= temp;
+			cnt++;
+		}
+	}
+}
+
