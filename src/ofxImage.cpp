@@ -220,7 +220,7 @@ void ofxImage::loadFromURL(string sURL) {
 
    //figure out how many bytes the image is and allocate
    int bytesToRead = str.size();
-   char buff[bytesToRead];
+   char* buff = new char[bytesToRead];
    memset(buff, 0, bytesToRead);
 
    //copy the bytes from the string to our buffer
